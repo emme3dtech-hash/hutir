@@ -10,11 +10,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: unzip -q hutir-android.zip
-      - name: Music from server
+      - name: Music (repo music/ or server)
+        timeout-minutes: 8
+        continue-on-error: true
         run: |
           mkdir -p app/www/music
+          if ls music/*.mp3 >/dev/null 2>&1; then cp music/*.mp3 app/www/music/; ls -la app/www/music; exit 0; fi
           for n in $(node -e "const t=require('fs').readFileSync('app/www/index.html','utf8');const m=t.match(/const MUSF=(\{[^;]*\});/);console.log(Object.values(eval('('+m[1]+')')).flat().join(' '))"); do
-            curl -fsSL --retry 3 -o app/www/music/$n.mp3 https://generated.biz.ua/hutir/music/$n.mp3 || { echo "::warning::no $n.mp3"; rm -f app/www/music/$n.mp3; }
+            curl -fsSL --connect-timeout 10 -m 90 -o app/www/music/$n.mp3 https://generated.biz.ua/hutir/music/$n.mp3 || { echo "::warning::no $n.mp3"; rm -f app/www/music/$n.mp3; }
           done
           ls -la app/www/music
       - name: Version + fixed signing key
