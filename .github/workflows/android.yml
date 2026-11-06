@@ -2,6 +2,8 @@ name: Build APK
 on:
   push:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -25,3 +27,10 @@ jobs:
         with:
           name: hutir-apk
           path: app/android/app/build/outputs/apk/debug/app-debug.apk
+      - run: cp app/android/app/build/outputs/apk/debug/app-debug.apk hutir.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: ${{ github.event.head_commit.message || 'Хутір' }}
+          make_latest: true
+          files: hutir.apk
