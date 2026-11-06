@@ -10,6 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: unzip -q hutir-android.zip
+      - name: Music from server
+        run: |
+          mkdir -p app/www/music
+          for n in $(node -e "const t=require('fs').readFileSync('app/www/index.html','utf8');const m=t.match(/const MUSF=(\{[^;]*\});/);console.log(Object.values(eval('('+m[1]+')')).flat().join(' '))"); do
+            curl -fsSL --retry 3 -o app/www/music/$n.mp3 https://generated.biz.ua/hutir/music/$n.mp3 || { echo "::warning::no $n.mp3"; rm -f app/www/music/$n.mp3; }
+          done
+          ls -la app/www/music
       - name: Version + fixed signing key
         env:
           KS_PASS: ${{ secrets.KS_PASS }}
