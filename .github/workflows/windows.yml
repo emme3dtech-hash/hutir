@@ -1,0 +1,38 @@
+name: Build Windows
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Prepare app
+        shell: bash
+        run: |
+          mkdir -p wapp/www
+          unzip -q hutir-web.zip -d wapp/www
+          if ls music/*.mp3 >/dev/null 2>&1; then mkdir -p wapp/www/music; cp music/*.mp3 wapp/www/music/; fi
+          cp win/main.js wapp/
+          V=$(grep -o "const GAMEV='[0-9]*'" wapp/www/index.html | grep -o '[0-9]*')
+          echo "V=$V" >> $GITHUB_ENV
+          cat > wapp/package.json <<JS
+          {"name":"hutir","productName":"Hutir","version":"1.0.$V","main":"main.js","author":"Storcheus",
+           "build":{"appId":"ua.storcheus.hutir","productName":"Хутір","files":["main.js","www/**/*"],"win":{"target":"nsis","icon":"www/icons/icon-512.png"},
+           "nsis":{"oneClick":false,"allowToChangeInstallationDirectory":true,"createDesktopShortcut":true,"shortcutName":"Хутір","artifactName":"hutir-setup.exe"}}}
+          JS
+      - run: npm i -D electron@31.7.7 electron-builder@24.13.3
+        working-directory: wapp
+      - run: npx electron-builder --win nsis --publish never
+        working-directory: wapp
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: win-v${{ env.V }}-b${{ github.run_number }}
+          name: Хутір v${{ env.V }} (Windows)
+          make_latest: false
+          files: wapp/dist/hutir-setup.exe
