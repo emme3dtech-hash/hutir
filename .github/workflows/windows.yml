@@ -19,6 +19,7 @@ jobs:
           unzip -q hutir-web.zip -d wapp/www
           if ls music/*.mp3 >/dev/null 2>&1; then mkdir -p wapp/www/music; cp music/*.mp3 wapp/www/music/; fi
           cp win/main.js wapp/
+          cp win/three.min.js wapp/www/
           V=$(grep -o "const GAMEV='[0-9]*'" wapp/www/index.html | grep -o '[0-9]*')
           echo "V=$V" >> $GITHUB_ENV
           cat > wapp/package.json <<JS
