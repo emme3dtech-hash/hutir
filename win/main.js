@@ -1,4 +1,6 @@
 const {app,BrowserWindow,shell,Menu,session}=require('electron');const path=require('path');
+/* продуктивність: дискретна відеокарта на ноутбуках, апаратне прискорення навіть для «чорного списку» драйверів */
+app.commandLine.appendSwitch('force_high_performance_gpu');app.commandLine.appendSwitch('ignore-gpu-blocklist');app.commandLine.appendSwitch('enable-gpu-rasterization');app.commandLine.appendSwitch('enable-zero-copy');
 const SRV=/^https:\/\/([a-z0-9-]+\.)*generated\.biz\.ua\//i;
 function create(){
   const ses=session.defaultSession;
@@ -6,7 +8,7 @@ function create(){
   ses.webRequest.onHeadersReceived({urls:['https://*.generated.biz.ua/*','https://generated.biz.ua/*']},(d,cb)=>{const h={};for(const k in d.responseHeaders){if(!/^access-control-/i.test(k))h[k]=d.responseHeaders[k]}
     h['Access-Control-Allow-Origin']=['*'];h['Access-Control-Allow-Headers']=['Authorization, Content-Type, X-Meta, X-Enc'];h['Access-Control-Allow-Methods']=['GET, POST, PUT, DELETE, OPTIONS'];h['Access-Control-Expose-Headers']=['X-Enc, X-Meta'];
     const r={responseHeaders:h};if(d.method==='OPTIONS')r.statusLine='HTTP/1.1 200 OK';cb(r)});
-  const w=new BrowserWindow({width:1400,height:900,minWidth:800,minHeight:560,backgroundColor:'#12110d',title:'Хутір',icon:path.join(__dirname,'www','icons','icon-512.png'),autoHideMenuBar:true,webPreferences:{contextIsolation:true,webSecurity:false}});
+  const w=new BrowserWindow({width:1400,height:900,minWidth:800,minHeight:560,backgroundColor:'#12110d',title:'Хутір',icon:path.join(__dirname,'www','icons','icon-512.png'),autoHideMenuBar:true,webPreferences:{contextIsolation:true,webSecurity:false,backgroundThrottling:false}});
   Menu.setApplicationMenu(null);w.loadFile(path.join(__dirname,'www','index.html'));
   w.webContents.setWindowOpenHandler(({url})=>{if(/^https?:|^tg:/.test(url))shell.openExternal(url);return{action:'deny'}});
   w.webContents.on('will-navigate',(e,url)=>{if(/^https?:|^tg:/.test(url)){e.preventDefault();shell.openExternal(url)}});
